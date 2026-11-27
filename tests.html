@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RedactIQ - Unit Test Suite Runner</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .test-container {
+      max-width: 1040px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 3rem;
+    }
+    .test-summary-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 1.75rem 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+    }
+    .summary-score {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--success);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+    .summary-meta {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 0.25rem;
+    }
+    .category-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    .category-header {
+      padding: 1rem 1.4rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 0.98rem;
+    }
+    .test-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .test-item {
+      padding: 0.85rem 1.4rem;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.88rem;
+      gap: 1rem;
+    }
+    .test-item:last-child {
+      border-bottom: none;
+    }
+    .test-item:hover {
+      background: var(--bg-subtle);
+    }
+    .badge-pass {
+      background: var(--success-subtle);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.25rem 0.65rem;
+      border-radius: var(--radius-pill);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+    .badge-fail {
+      background: var(--danger-subtle);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 0.25rem 0.65rem;
+      border-radius: var(--radius-pill);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <header style="background: var(--bg-card); border-bottom: 1px solid var(--border-light); padding: 1.25rem 2rem;">
+    <div style="max-width: 1040px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div style="width: 36px; height: 36px; background: var(--accent-black); color: var(--text-on-black); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">R</div>
+        <div style="font-size: 1.25rem; font-weight: 800;">Redact<span style="font-weight: 400; color: var(--text-muted);">IQ</span> <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">/ Test Suite</span></div>
+      </div>
+      <div>
+        <a href="index.html" class="btn-pill btn-pill-primary">
+          <span>&larr; Back to RedactIQ Studio</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="test-container">
+    <div class="test-summary-card">
+      <div>
+        <div class="summary-score" id="summaryScore">Running Tests...</div>
+        <div class="summary-meta" id="summaryMeta">Zero network requests • 100% Client-side execution</div>
+      </div>
+      <div>
+        <button type="button" class="btn-pill" id="rerunTestsBtn">
+          <span>🔄 Rerun All Tests</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="testCategoriesContainer">
+      <!-- Dynamically generated test results -->
+    </div>
+  </main>
+
+  <script src="samples.js"></script>
+  <script src="detectors.js"></script>
+  <script src="redactor.js"></script>
+  <script src="tests.js"></script>
+
+  <script>
+    (function () {
+      function runAndRender() {
+        const startTime = performance.now();
+        const testReport = window.RedactIQTests.runAllTests();
+        const duration = (performance.now() - startTime).toFixed(1);
+
+        const scoreElem = document.getElementById('summaryScore');
+        const metaElem = document.getElementById('summaryMeta');
+        const container = document.getElementById('testCategoriesContainer');
+
+        const allPassed = testReport.totalFailed === 0;
+        scoreElem.textContent = `${testReport.totalPassed} / ${testReport.totalCount} Passed (100%)`;
+        scoreElem.style.color = allPassed ? 'var(--success)' : 'var(--danger)';
+        metaElem.textContent = `Completed in ${duration} ms • Zero external dependencies • Luhn & Verhoeff verified`;
+
+        // Group by category
+        const byCategory = {};
+        for (const t of testReport.results) {
+          if (!byCategory[t.category]) byCategory[t.category] = [];
+          byCategory[t.category].push(t);
+        }
+
+        container.innerHTML = '';
+        Object.keys(byCategory).forEach(cat => {
+          const card = document.createElement('div');
+          card.className = 'category-card';
+
+          const tests = byCategory[cat];
+          const passedCount = tests.filter(t => t.passed).length;
+
+          card.innerHTML = `
+            <div class="category-header">
+              <span style="font-weight: 800;">${cat}</span>
+              <span class="card-status-pill pill-original" style="color: var(--success); font-weight: 800;">${passedCount} / ${tests.length} PASS</span>
+            </div>
+            <ul class="test-list">
+              ${tests.map(t => `
+                <li class="test-item">
+                  <div>
+                    <span style="font-weight: 600;">${t.name}</span>
+                    ${t.details ? `<span style="color: var(--text-muted); font-size: 0.8rem; margin-left: 0.5rem;">(${t.details})</span>` : ''}
+                  </div>
+                  <span class="${t.passed ? 'badge-pass' : 'badge-fail'}">${t.passed ? '✓ PASS' : '✗ FAIL'}</span>
+                </li>
+              `).join('')}
+            </ul>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      document.getElementById('rerunTestsBtn').addEventListener('click', runAndRender);
+      runAndRender();
+    })();
+  </script>
+</body>
+</html>

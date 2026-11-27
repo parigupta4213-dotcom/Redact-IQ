@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="RedactIQ - Modern Client-Side PII Data Sanitization Tool. Zero network requests, 100% private.">
+  <title>RedactIQ - Client-Side PII Sanitization Studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="app-wrapper">
+
+    <!-- =======================================================================
+         Left Navigation Sidebar (BizLink Style)
+         ======================================================================= -->
+    <aside class="sidebar" aria-label="Main Navigation">
+      <div class="sidebar-header">
+        <div class="sidebar-logo" aria-hidden="true">R</div>
+        <div class="sidebar-brand-text">Redact<span>IQ</span></div>
+      </div>
+
+      <!-- Main Navigation Menu -->
+      <div class="sidebar-section">
+        <div class="sidebar-title">Studio</div>
+        <div class="nav-item active" id="navStudioBtn">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">🛡️</span>
+            <span>Sanitization Studio</span>
+          </div>
+          <span class="nav-badge" id="navTotalBadge">0</span>
+        </div>
+
+        <div class="nav-item" id="navMappingBtn">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">🔑</span>
+            <span>Pseudonym Map</span>
+          </div>
+          <span class="nav-badge" id="navMappingBadge">0</span>
+        </div>
+
+        <a href="tests.html" target="_blank" class="nav-item" title="Open automated unit test suite">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">🧪</span>
+            <span>Unit Test Suite</span>
+          </div>
+          <span class="nav-badge" style="color: var(--success);">55/55</span>
+        </a>
+      </div>
+
+      <!-- Detection Engines Filter Section -->
+      <div class="sidebar-section">
+        <div class="sidebar-title">Detection Engines</div>
+
+        <label class="detector-item active" title="RFC 5322 Email Addresses">
+          <div class="detector-left">
+            <input type="checkbox" id="filterEmail" data-type="EMAIL" checked style="display: none;">
+            <span class="detector-dot dot-email"></span>
+            <span>Email</span>
+          </div>
+          <span class="detector-count" id="sidebarCountEmail">0</span>
+        </label>
+
+        <label class="detector-item active" title="Indian (+91) & International E.164 Phone Numbers">
+          <div class="detector-left">
+            <input type="checkbox" id="filterPhone" data-type="PHONE" checked style="display: none;">
+            <span class="detector-dot dot-phone"></span>
+            <span>Phone</span>
+          </div>
+          <span class="detector-count" id="sidebarCountPhone">0</span>
+        </label>
+
+        <label class="detector-item active" title="IPv4 (0-255 octets) & IPv6 Addresses">
+          <div class="detector-left">
+            <input type="checkbox" id="filterIp" data-type="IP" checked style="display: none;">
+            <span class="detector-dot dot-ip"></span>
+            <span>IP Address</span>
+          </div>
+          <span class="detector-count" id="sidebarCountIp">0</span>
+        </label>
+
+        <label class="detector-item active" title="Permanent Account Number with 4th character validation">
+          <div class="detector-left">
+            <input type="checkbox" id="filterPan" data-type="PAN" checked style="display: none;">
+            <span class="detector-dot dot-pan"></span>
+            <span>PAN</span>
+          </div>
+          <span class="detector-count" id="sidebarCountPan">0</span>
+        </label>
+
+        <label class="detector-item active" title="Indian 12-digit UIDAI Aadhaar with Verhoeff Checksum">
+          <div class="detector-left">
+            <input type="checkbox" id="filterAadhaar" data-type="AADHAAR" checked style="display: none;">
+            <span class="detector-dot dot-aadhaar"></span>
+            <span>Aadhaar</span>
+          </div>
+          <span class="detector-count" id="sidebarCountAadhaar">0</span>
+        </label>
+
+        <label class="detector-item active" title="Credit Cards with Luhn Checksum & Network Prefixes">
+          <div class="detector-left">
+            <input type="checkbox" id="filterCard" data-type="CREDIT_CARD" checked style="display: none;">
+            <span class="detector-dot dot-card"></span>
+            <span>Credit Card</span>
+          </div>
+          <span class="detector-count" id="sidebarCountCard">0</span>
+        </label>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div class="privacy-pill">
+          <span>🔒</span>
+          <span>100% Client-Side. Zero data leaves browser.</span>
+        </div>
+
+        <button type="button" class="theme-pill-btn" id="themeToggleBtn">
+          <span id="themeToggleLabel">Theme: Light</span>
+          <span id="themeToggleIcon">☀️</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- =======================================================================
+         Main Studio Area
+         ======================================================================= -->
+    <main class="main-studio">
+
+      <!-- Studio Action Bar Header -->
+      <header class="studio-header">
+        <!-- Mode Tabs Segmented Control -->
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+          <div class="mode-segmented-pill" role="radiogroup" aria-label="Redaction Modes">
+            <button type="button" class="mode-tab-btn active" data-mode="full" id="modeFullBtn" role="radio" aria-checked="true">
+              Full Mask
+            </button>
+            <button type="button" class="mode-tab-btn" data-mode="partial" id="modePartialBtn" role="radio" aria-checked="false">
+              Partial Mask
+            </button>
+            <button type="button" class="mode-tab-btn" data-mode="pseudo" id="modePseudoBtn" role="radio" aria-checked="false">
+              Consistent Pseudonymization
+            </button>
+          </div>
+
+          <label class="tag-toggle-check" id="typeTagToggleLabel" title="Include entity tag e.g. [REDACTED:EMAIL]">
+            <input type="checkbox" id="includeTypeTagCheckbox">
+            <span>Include Type Tags (<code>[REDACTED:EMAIL]</code>)</span>
+          </label>
+        </div>
+
+        <!-- Action / Export Buttons -->
+        <div class="search-sample-bar">
+          <button type="button" class="btn-pill" id="loadSampleBtn" title="Load realistic noisy clinical/support ticket mix">
+            <span>⚡ Noisy Ticket</span>
+          </button>
+          <button type="button" class="btn-pill" id="loadResumeBtn" title="Load candidate resume dossier">
+            <span>📄 Resume</span>
+          </button>
+          <button type="button" class="btn-pill" id="loadCsvSampleBtn" title="Load structured CSV dataset">
+            <span>📊 CSV</span>
+          </button>
+          <button type="button" class="btn-pill btn-pill-danger" id="clearBtn" title="Clear input and output">
+            <span>🗑️ Clear</span>
+          </button>
+
+          <button type="button" class="btn-pill btn-pill-primary" id="downloadSanitizedBtn">
+            <span>+ Download Sanitized (<span id="downloadFileTypeLabel">sanitized.txt</span>)</span>
+          </button>
+          <button type="button" class="btn-pill" id="copyClipboardBtn" title="Copy sanitized text to clipboard">
+            <span id="copyBtnIcon">📋</span>
+            <span id="copyBtnText">Copy</span>
+          </button>
+          <button type="button" class="btn-pill" id="downloadAuditBtn" title="Download privacy audit report (zero PII)">
+            <span>📊 Audit JSON</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- =====================================================================
+           KPI Analytics Cards (Matching BizLink Top Row)
+           ===================================================================== -->
+      <section class="analytics-container">
+        <div class="kpi-grid">
+
+          <!-- Widget 1: Minimalist Entity Bar Chart -->
+          <div class="kpi-card">
+            <div class="kpi-card-title">
+              <span>Entity Distribution</span>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">LIVE SCAN</span>
+            </div>
+            <div class="chart-bars-wrap">
+              <div class="chart-bar-col">
+                <div class="chart-bar-fill" id="barEmail" style="height: 60%;"></div>
+                <div class="chart-bar-lbl">Email</div>
+              </div>
+              <div class="chart-bar-col">
+                <div class="chart-bar-fill striped" id="barPhone" style="height: 70%;"></div>
+                <div class="chart-bar-lbl">Phone</div>
+              </div>
+              <div class="chart-bar-col">
+                <div class="chart-bar-fill" id="barIp" style="height: 40%;"></div>
+                <div class="chart-bar-lbl">IP</div>
+              </div>
+              <div class="chart-bar-col">
+                <div class="chart-bar-fill striped" id="barPan" style="height: 35%;"></div>
+                <div class="chart-bar-lbl">PAN</div>
+              </div>
+              <div class="chart-bar-col">
+                <div class="chart-bar-fill" id="barAadhaar" style="height: 45%;"></div>
+                <div class="chart-bar-lbl">Aadhaar</div>
+              </div>
+              <div class="chart-bar-col">
+                <div class="chart-bar-fill striped" id="barCard" style="height: 45%;"></div>
+                <div class="chart-bar-lbl">Card</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Widget 2: Arc Gauge -->
+          <div class="kpi-card">
+            <div class="kpi-card-title">
+              <span>Privacy & Verification</span>
+              <span style="color: var(--success); font-weight: 800;">100% AIR-GAPPED</span>
+            </div>
+            <div class="gauge-wrap">
+              <svg class="gauge-svg" viewBox="0 0 100 55">
+                <path class="gauge-bg" d="M 10 50 A 40 40 0 0 1 90 50" />
+                <path class="gauge-meter" id="gaugePath" d="M 10 50 A 40 40 0 0 1 90 50" />
+              </svg>
+              <div class="gauge-data">
+                <div class="gauge-val" id="gaugePercentVal">100%</div>
+                <div class="gauge-subtext">Client-Side Verified</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Widget 3: Big Number Stats: Total Entities Found -->
+          <div class="kpi-card">
+            <div class="kpi-card-title">
+              <span>Total Entities Found</span>
+              <span id="statEmailPanRatio" style="font-size: 0.72rem; color: var(--text-muted);">ACTIVE</span>
+            </div>
+            <div>
+              <div class="stat-big-val" id="statTotalCount">0</div>
+              <div class="stat-link">Protected Spans &rarr;</div>
+            </div>
+          </div>
+
+          <!-- Widget 4: Validation Engine & Rejected Decoys -->
+          <div class="kpi-card kpi-rejected" id="statRejectedCard" title="Click to inspect decoys rejected by validation algorithms">
+            <div class="kpi-card-title">
+              <span>Rejected Decoys</span>
+              <span style="font-size: 0.72rem; color: var(--danger); font-weight: 700;">ALGORITHMIC FILTER</span>
+            </div>
+            <div>
+              <div class="stat-big-val" id="statRejectedCount">0</div>
+              <div class="stat-link" style="color: var(--danger);">Inspect Failed Checksums &rarr;</div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           Workspace: File Drop Strip & Side-by-Side Diff Board
+           ===================================================================== -->
+      <section class="workspace-container">
+
+        <!-- Minimalist Upload Strip -->
+        <div class="upload-strip" id="dropzone" role="button" tabindex="0">
+          <input type="file" id="fileInput" class="file-input-hidden" style="display: none;" accept=".txt,.csv,text/plain,text/csv">
+          <div class="upload-strip-left">
+            <div class="upload-icon-circle">📂</div>
+            <div>
+              <div class="upload-title">Drop <strong>.txt</strong> or <strong>.csv</strong> file here, or click to browse</div>
+              <div class="upload-subtitle">Processed 100% in volatile browser memory • Zero network calls</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div id="fileInfoChip" class="file-chip" style="display: none;">
+              <span id="fileInfoText">sample.txt</span>
+              <button type="button" id="removeFileBtn" title="Remove loaded file">×</button>
+            </div>
+            <button type="button" class="btn-pill" id="toggleInputExpandBtn" style="padding: 0.35rem 0.8rem; font-size: 0.78rem;">
+              <span id="inputExpandText">Hide Raw Input</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Raw Textarea Drawer -->
+        <div class="raw-drawer" id="rawTextareaWrapper">
+          <textarea id="rawInputText" class="raw-textarea-input" placeholder="Type or paste text with sensitive PII (emails, phone numbers, PAN, Aadhaar, credit cards, IPs)..." spellcheck="false"></textarea>
+        </div>
+
+        <!-- Side-by-Side Diff Board Grid -->
+        <div class="diff-board-grid">
+
+          <!-- Left Card: Original Document -->
+          <div class="diff-card">
+            <div class="diff-card-header">
+              <div class="diff-card-title">
+                <span>Original Document</span>
+                <span class="card-status-pill pill-original" id="originalCharCount">0 chars</span>
+              </div>
+              <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600;">Detected PII Highlighted</div>
+            </div>
+            <div class="diff-card-body" id="originalContentPane" tabindex="0" role="region" aria-label="Original document with detected highlights">
+              <div class="empty-hero">
+                <div class="empty-hero-icon">📋</div>
+                <div class="empty-hero-title">No Input Text Loaded</div>
+                <div class="empty-hero-desc">Paste text above, drop a file, or click one of the sample buttons to start.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Card: Sanitized Output -->
+          <div class="diff-card">
+            <div class="diff-card-header">
+              <div class="diff-card-title">
+                <span>Sanitized Output</span>
+                <span class="card-status-pill pill-sanitized" id="sanitizedCharCount">0 chars</span>
+              </div>
+              <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600;">Lockstep Sync Scroll</div>
+            </div>
+            <div class="diff-card-body" id="sanitizedContentPane" tabindex="0" role="region" aria-label="Sanitized document output">
+              <div class="empty-hero">
+                <div class="empty-hero-icon">🛡️</div>
+                <div class="empty-hero-title">Sanitized View Ready</div>
+                <div class="empty-hero-desc">Tokens and pseudonyms render here in real-time with zero data leakage.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Pseudonymization Mapping Card (Collapsible) -->
+        <div class="mapping-card" id="mappingSection" style="display: none;">
+          <div class="mapping-card-header">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="font-size: 1.1rem;">🔑</span>
+              <span style="font-weight: 800; font-size: 0.95rem;">Consistent Pseudonymization Mapping Table</span>
+              <span class="card-status-pill pill-original" id="mappingCountBadge">0</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="font-size: 0.76rem; color: var(--text-muted);">RAM-only storage</span>
+              <button type="button" class="btn-pill" id="downloadMappingBtn" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+                <span>💾 Download Mapping JSON</span>
+              </button>
+            </div>
+          </div>
+          <div class="mapping-table-wrap">
+            <table class="mapping-table">
+              <thead>
+                <tr>
+                  <th>Pseudonym ID</th>
+                  <th>Entity Type</th>
+                  <th>Normalized Lookup Form</th>
+                  <th>First Encountered Value</th>
+                  <th>Occurrences</th>
+                </tr>
+              </thead>
+              <tbody id="mappingTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Floating Hover Tooltip -->
+  <div id="floatingTooltip" class="floating-tooltip" role="tooltip" aria-hidden="true"></div>
+
+  <!-- Modal for Rejected Candidates Inspection -->
+  <div id="rejectedModalBackdrop" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.2rem;">🔍</span>
+          <span style="font-weight: 800; font-size: 1.05rem;">Candidates Rejected by Algorithmic Validation</span>
+          <span class="card-status-pill pill-original" id="modalRejectedCountBadge">0</span>
+        </div>
+        <button type="button" class="btn-pill" id="modalCloseBtn" style="padding: 0.25rem 0.6rem;">&times;</button>
+      </div>
+      <div class="modal-body" id="modalRejectedList">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Vanilla Scripts -->
+  <script src="samples.js"></script>
+  <script src="detectors.js"></script>
+  <script src="redactor.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

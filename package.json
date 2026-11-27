@@ -1,0 +1,21 @@
+{
+  "name": "redactiq",
+  "version": "1.0.0",
+  "description": "100% Client-Side PII Data Sanitization Tool",
+  "main": "app.js",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "test": "node tests.js"
+  },
+  "keywords": [
+    "pii",
+    "redaction",
+    "sanitization",
+    "luhn",
+    "verhoeff",
+    "client-side",
+    "privacy"
+  ],
+  "author": "Google Deepmind / Antigravity",
+  "license": "MIT"
+}
